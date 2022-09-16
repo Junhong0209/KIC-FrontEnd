@@ -13,7 +13,3 @@
 
 위 커밋 메세지는 아래 링크를 보고 참고 하였습니다.  
 [[Git] 좋은 커밋 메세지를 작성하기 위한 규칙들](https://beomseok95.tistory.com/328)
-
-## 작업 사항
-* @types라는 폴더를 생성하여 @editorjs 라이브러리를 다양하게 사용하기 위한 추가 라이브러리들의 타입스크립트 지원이 되지 않는 것을 타입스크립트에서 사용할 수 있도록 하였습니다.  
-[참고한 블로그 글](https://kimchanjung.github.io/programming/2020/07/05/typescipt-import-js-module-error/)
