@@ -1,4 +1,4 @@
-# Someday team's Web Front-End Projects Template Repository.
+# KICSV Web Front-End Projects Repository.
 
 ### 커밋 메세지
 * feat: 새로운 기능에 대한 커밋
