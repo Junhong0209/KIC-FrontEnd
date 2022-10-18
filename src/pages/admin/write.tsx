@@ -1,5 +1,6 @@
+import "react-datepicker/dist/react-datepicker.css";
 import styled from "@emotion/styled";
-import { ChangeEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import Button from "src/components/common/button";
 import Input from "src/components/common/input";
 import TextArea from "src/components/common/textArea";
@@ -7,10 +8,19 @@ import { ButtonData, ButtonType } from "src/core/store/postType";
 import useForm from "src/core/hooks/useForm";
 import postValidate from "src/core/utils/validate";
 import SelectDate from "src/components/selectDate";
-
-import "react-datepicker/dist/react-datepicker.css";
+import { Theme, useTheme } from "@emotion/react";
+import { useRecoilState } from "recoil";
+import addActiveClass from "src/core/utils/addActiveClass";
+import FileInput from "src/components/common/fileInput";
+import { DateCheck, DateFormat } from "src/core/utils/dateFunc";
+import { CustomToast } from "src/core/lib/CustomToast";
+import { handleAddNewPost } from "src/core/apis/admin/posting.api";
+import { NextRouter, useRouter } from "next/router";
 
 const Write = () => {
+  const theme: Theme = useTheme();
+  const router: NextRouter = useRouter();
+
   const [startOperatingPeriod, setStartOperatingPeriod] = useState<Date>(
     new Date()
   );
@@ -19,50 +29,76 @@ const Write = () => {
   );
   const [startApplyPeriod, setStartApplyPeriod] = useState<Date>(new Date());
   const [finishApplyPeriod, setFinishApplyPeriod] = useState<Date>(new Date());
-  const [thumbnailImageFile, setThumbnailImageFile] = useState();
-
+  const [thumbnailImageFile, setThumbnailImageFile] = useState<any>();
+  const [thumbnailFileName, setThumbnailFileName] = useState<string>("");
   const [postType, setPostType] = useState<string>("");
+  const [buttonDatas, setButtonDatas] = useRecoilState(ButtonData);
+
   const { values, errors, isLoading, handleChange, handleSubmit } = useForm({
     initValue: {
       title: "",
       contents: "",
       link: "",
     },
-    onSubmit: (values) => {
-      console.log(values);
-      console.log(`
-        startOperatingPeriod: ${startOperatingPeriod.getFullYear()}/${
-        startOperatingPeriod.getMonth() + 1
-      }/${startOperatingPeriod.getDate()}, finishOperatingPeriod: ${finishOperatingPeriod}
-        startApplyPeriod: ${startApplyPeriod}, finishApply: ${finishApplyPeriod}
-      `);
-      console.log(postType);
+    onSubmit: (values: any) => {
+      if (DateCheck(finishOperatingPeriod) && DateCheck(finishApplyPeriod)) {
+        const data = new FormData();
+        data.append("post_type", postType);
+        data.append("start_operating_period", DateFormat(startOperatingPeriod));
+        data.append(
+          "finish_operating_period",
+          DateFormat(finishOperatingPeriod)
+        );
+        data.append("start_apply_period", DateFormat(startApplyPeriod));
+        data.append("finish_apply_period", DateFormat(finishApplyPeriod));
+        data.append("title", values.title);
+        data.append("content", values.contents);
+        data.append("link", values.link);
+        data.append("thumbnail", thumbnailImageFile);
+        data.append("disabled", "false");
+        handleAddNewPost(data)
+          .then((res) => {
+            router.push("/admin");
+            CustomToast(res.detail, theme.colors.ToastSuccess);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        CustomToast(
+          "마감기간이 오늘 날짜와 겹치지 않도록 다시 설정해주세요!",
+          theme.colors.ToastError
+        );
+      }
     },
     validate: postValidate,
   });
 
   const handleChangeImageFile = (event: any) => {
-    console.log(event.target.files);
-    setThumbnailImageFile(event.target.files);
+    const Files = event.target.files[0];
+    setThumbnailImageFile(Files);
+    setThumbnailFileName(Files.name);
   };
-
-  useEffect(() => {
-    console.log(thumbnailImageFile);
-  }, [thumbnailImageFile]);
 
   return (
     <Container>
       <Wrapper>
         <Item>Post Type</Item>
         <ButtonWrapper>
-          {ButtonData.map((data: ButtonType) => {
+          {buttonDatas.map((data: ButtonType) => {
             return (
               <Button
                 key={data.id}
                 text={data.text}
                 marginRight={data.marginRight}
                 height={data.height}
-                onClick={() => setPostType(data.text)}
+                backgroundColor={
+                  data.active ? theme.colors.BGray70 : "transparent"
+                }
+                onClick={() => {
+                  setPostType(data.text);
+                  addActiveClass(buttonDatas, setButtonDatas, data.id);
+                }}
               />
             );
           })}
@@ -110,18 +146,15 @@ const Write = () => {
           border="1px solid #000000"
           focusBorder="1px solid #F2F"
           name="contents"
-          value={values.content}
+          value={values.contents}
           onChange={handleChange}
         />
       </Wrapper>
       <Wrapper>
         <Item>Thumbnail</Item>
-        <Input
-          width="600px"
-          height="40px"
-          type="file"
-          accept="image/*"
-          onChange={handleChangeImageFile}
+        <FileInput
+          thumbnailFileName={thumbnailFileName}
+          handleChangeImageFile={handleChangeImageFile}
         />
       </Wrapper>
       <Wrapper>
@@ -141,7 +174,6 @@ const Write = () => {
       <Button
         width="200px"
         text="Apply"
-        margin="auto"
         marginTop="30px"
         fontSize="16px"
         onClick={handleSubmit}
@@ -158,6 +190,7 @@ const Container = styled.div`
   margin: auto;
   padding-top: 100px;
   flex-direction: column;
+  align-items: center;
 `;
 
 const ButtonWrapper = styled.div`
