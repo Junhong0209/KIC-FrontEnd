@@ -1,29 +1,35 @@
 import styled from "@emotion/styled";
 import Image from "next/image";
+import Link from "next/link";
 import Edit from "public/image/Pencil.png";
 import Trash from "public/image/Trash.png";
+import { useEffect, useState } from "react";
 import Button from "src/components/common/button";
+import { handleGetPost } from "src/core/apis/admin/posting.api";
 
-interface type {
+interface contentsType {
   id: number;
-  type: string;
+  post_type: string;
   title: string;
 }
 
 const Main = () => {
-  const Content: type[] = [
-    { id: 1, type: "program", title: "Hello" },
-    { id: 2, type: "event", title: "hi" },
-    { id: 3, type: "news", title: "test" },
-  ];
+  const [contents, setContents] = useState<contentsType[]>([]);
+
+  useEffect(() => {
+    handleGetPost()
+      .then((res) => {
+        setContents(res.data.content);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
   return (
     <Container>
-      <Button
-        text="New Post"
-        marginLeft="auto"
-        fontSize="14px"
-        onClick={() => alert("this button is new post button.")}
-      />
+      <Link href="/admin/write" passHref>
+        <Button text="New Post" marginLeft="auto" fontSize="14px" />
+      </Link>
       <Header>
         <div id="type" className="line">
           Type
@@ -33,34 +39,38 @@ const Main = () => {
         </div>
       </Header>
       <PostWarpper>
-        {Content.map((content: type) => {
-          return (
-            <PostList key={content.id}>
-              <PostItem id="type" width="50px">
-                {content.id}
-              </PostItem>
-              <TitleWarpper>
-                <PostItem id="title" width="500px">
-                  {content.title}
+        {contents.length !== 0 ? (
+          contents.map((content: contentsType) => {
+            return (
+              <PostList key={content.id}>
+                <PostItem id="type">
+                  {content.post_type ? content.post_type : "???"}
                 </PostItem>
-                <Image
-                  src={Edit}
-                  width={30}
-                  height={30}
-                  alt="edit image"
-                  style={{ cursor: "pointer" }}
-                />
-                <Image
-                  src={Trash}
-                  width={30}
-                  height={30}
-                  alt="trash image"
-                  style={{ cursor: "pointer" }}
-                />
-              </TitleWarpper>
-            </PostList>
-          );
-        })}
+                <TitleWarpper>
+                  <PostItem id="title" width="550px">
+                    {content.title}
+                  </PostItem>
+                  <Image
+                    src={Edit}
+                    width={30}
+                    height={30}
+                    alt="edit image"
+                    style={{ cursor: "pointer" }}
+                  />
+                  <Image
+                    src={Trash}
+                    width={30}
+                    height={30}
+                    alt="trash image"
+                    style={{ cursor: "pointer" }}
+                  />
+                </TitleWarpper>
+              </PostList>
+            );
+          })
+        ) : (
+          <ErrorMessage>게시글이 없습니다.</ErrorMessage>
+        )}
       </PostWarpper>
     </Container>
   );
@@ -81,12 +91,6 @@ const Container = styled.div`
   }
 `;
 
-const NewPostButton = styled.div`
-  display: flex;
-  margin-left: auto;
-  cursor: pointer;
-`;
-
 const Header = styled.div`
   display: flex;
   width: 100%;
@@ -94,14 +98,14 @@ const Header = styled.div`
   line-height: 35px;
   text-align: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 
   & > #type {
-    width: 50px;
+    width: 80px;
   }
 
   & > #title {
-    width: 600px;
+    width: 580px;
   }
 `;
 
@@ -110,33 +114,48 @@ const PostWarpper = styled.div`
   flex-direction: column;
 
   & > div > #type {
-    width: 50px;
+    width: 80px;
   }
 
   & > div > #title {
-    width: 450px;
+    width: 400px;
   }
 `;
 
 const TitleWarpper = styled.div`
   display: flex;
   justify-content: space-between;
-  width: 600px;
+  width: 580px;
 `;
 
 const PostList = styled.div`
   display: flex;
   justify-content: space-between;
-  height: 30px;
+  height: 50px;
   line-height: 30px;
-  margin-bottom: 10px;
   text-align: center;
+  padding: 10px 0px;
+  border-radius: 4px;
+  cursor: default;
 
   & > div > #title {
     text-align: start;
   }
+
+  &:hover {
+    background-color: #c4c4c4;
+  }
 `;
 
-const PostItem = styled.div<{ width: string }>`
+const PostItem = styled.div<{ width?: string }>`
   width: ${(props) => props.width};
+`;
+
+const ErrorMessage = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-top: 30px;
+  font-size: 20px;
+  font-weight: 600;
 `;
