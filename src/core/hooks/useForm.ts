@@ -2,17 +2,12 @@ import { Theme, useTheme } from "@emotion/react";
 import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
 import { CustomToast } from "../lib/CustomToast";
 import postValidate from "../utils/validate";
+import { useFormType } from "src/types/useForm.type";
 
 interface useFormProps {
-  initValue: object;
+  initValue: useFormType;
   onSubmit: (values: object) => void;
   validate: typeof postValidate;
-}
-
-interface postValidateProps {
-  title?: string;
-  content?: string;
-  link?: string;
 }
 
 /**
@@ -21,14 +16,16 @@ interface postValidateProps {
  */
 const useForm = ({ initValue, onSubmit, validate }: useFormProps) => {
   const theme: Theme = useTheme();
-  const [values, setValues] = useState<postValidateProps>(initValue);
-  const [errors, setErrors] = useState<postValidateProps>({});
+  const [values, setValues] = useState<useFormType>(initValue);
+  const [errors, setErrors] = useState<useFormType>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   /**
    * 데이터를 입력하면 하나의 오브젝트에 입력하고 변경 해주는 함수
    */
-  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
     setValues({ ...values, [name]: value });
   };
@@ -40,7 +37,6 @@ const useForm = ({ initValue, onSubmit, validate }: useFormProps) => {
     setIsLoading(true);
     event.preventDefault();
     await new Promise((r) => setTimeout(r, 1000));
-    console.log(values);
     setErrors(validate(values));
   };
 
@@ -48,9 +44,7 @@ const useForm = ({ initValue, onSubmit, validate }: useFormProps) => {
     if (isLoading) {
       if (Object.keys(errors).length === 0) {
         onSubmit(values);
-        console.log("hi");
       } else {
-        console.log(errors);
         CustomToast(
           "값을 입력하지 않은 곳이 있습니다. 값을 입력 후 작성해주세요.",
           theme.colors.ToastError
