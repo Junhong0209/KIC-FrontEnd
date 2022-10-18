@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { theme } from "src/core/styles/theme";
 import { ThemeProvider, Global } from "@emotion/react";
 import type { AppProps } from "next/app";
+import "src/core/styles/customFile.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
